@@ -86,7 +86,7 @@ module BlueprinterSchema
       is_collection = ar_association.collection?
       association_model = ar_association.klass
 
-      associated_schema = generate(serializer: blueprint_class, model: association_model)
+      associated_schema = generate(blueprint_class, association_model)
 
       is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
     end

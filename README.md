@@ -12,16 +12,27 @@ gem "blueprinter_schema"
 
 ## Usage
 
-With the folloing Model and Serializer:
+With the folloing Models and Serializers:
 ```rb
+class Address < ApplicationRecord
+  belongs_to :user
+end
+
 class User < ApplicationRecord
-  # ...
+  has_many :addresses
+end
+
+class AddressSerializer < Blueprinter::Base
+  identifier :id
+
+  fields :address
 end
 
 class UserSerializer < Blueprinter::Base
   identifier :id
 
   fields :name, :email, :created_at
+  association :addresses, blueprint: AddressSerializer
 end
 ```
 
@@ -46,6 +57,23 @@ BlueprinterSchema.generate(UserSerializer, User)
     },
     "name" => {
       "type" => ["string", "null"]
+    },
+    "addresses" => {
+      "type" => "array",
+      "items" => {
+        "type" => "object",
+        "title" => "Address",
+        "properties" => {
+          "id" => {
+            "type" => "integer"
+          },
+          "address" => {
+            "type" => "string"
+          }
+        },
+        "required" => ["id", "address"],
+        "additionalProperties" => false
+      }
     }
   },
   "required" => ["id", "created_at", "email", "name"],
