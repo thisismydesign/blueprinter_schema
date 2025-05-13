@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'blueprinter_schema'
+require 'active_record'
+require 'blueprinter'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
