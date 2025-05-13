@@ -1,0 +1,10 @@
+{
+  "name": "blueprinter_schema",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ruby",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  }
+}
