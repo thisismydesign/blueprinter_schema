@@ -33,7 +33,7 @@ BlueprinterSchema.generate(UserSerializer, User)
 ```rb
 {
   "type" => "object",
-  "title" => "TestUser",
+  "title" => "User",
   "properties" => {
     "id" => {
       "type" => "integer"
