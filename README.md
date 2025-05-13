@@ -1,6 +1,6 @@
 # BlueprinterSchema
 
-### Create JSON Schema from Blueprinter serializers and ActiveRecord Models.
+### Create JSON Schema from Blueprinter Serializers and ActiveRecord Models.
 
 ## Installation
 
@@ -11,6 +11,47 @@ gem "blueprinter_schema"
 ```
 
 ## Usage
+
+With the folloing Model and Serializer:
+```rb
+class User < ApplicationRecord
+  # ...
+end
+
+class UserSerializer < Blueprinter::Base
+  identifier :id
+
+  fields :name, :email, :created_at
+end
+```
+
+Generate JSON Schema:
+```rb
+BlueprinterSchema.generate(UserSerializer, User)
+```
+
+```rb
+{
+  "type" => "object",
+  "title" => "TestUser",
+  "properties" => {
+    "id" => {
+      "type" => "integer"
+    },
+    "created_at" => {
+      "type" => "string", "format" => "date-time"
+    },
+    "email" => {
+      "type" => "string"
+    },
+    "name" => {
+      "type" => ["string", "null"]
+    }
+  },
+  "required" => ["id", "created_at", "email", "name"],
+  "additionalProperties" => false
+}
+```
 
 ## Development
 
