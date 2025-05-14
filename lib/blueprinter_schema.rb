@@ -13,7 +13,7 @@ module BlueprinterSchema
         'type' => 'object',
         'title' => model.name,
         'properties' => build_properties(fields, associations, model, options),
-        'required' => build_required_fields(fields),
+        'required' => build_required_fields(fields, options),
         'additionalProperties' => false
       }
     end
@@ -40,8 +40,8 @@ module BlueprinterSchema
       !options[:include_conditional_fields] && (field.options[:if] || field.options[:unless])
     end
 
-    def build_required_fields(fields)
-      fields.keys.map(&:to_s)
+    def build_required_fields(fields, options)
+      fields.reject { |_, field| skip_field?(field, options) }.keys.map(&:to_s)
     end
 
     def field_to_json_schema(field, model, options)
