@@ -50,6 +50,7 @@ module BlueprinterSchema
     end
 
     # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/CyclomaticComplexity
     def ar_column_to_json_schema(column)
       case column.type
       when :string, :text
@@ -64,12 +65,15 @@ module BlueprinterSchema
         build_json_schema_type('string', column.null, 'date')
       when :datetime, :timestamp
         build_json_schema_type('string', column.null, 'date-time')
+      when :uuid
+        build_json_schema_type('string', column.null, 'uuid')
       else
         # Unknown column type, we don't know the schema type
         {}
       end
     end
     # rubocop:enable Metrics/MethodLength
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def build_json_schema_type(json_schema_type, nullable, format = nil)
       type = { 'type' => nullable ? [json_schema_type, 'null'] : json_schema_type }
