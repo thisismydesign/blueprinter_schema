@@ -1,6 +1,6 @@
 # BlueprinterSchema
 
-### Create JSON Schema from Blueprinter Serializers and ActiveRecord Models.
+### Create JSON Schema from [Blueprinter](https://github.com/procore-oss/blueprinter) Serializers and ActiveRecord Models.
 
 Serializers define which fields are used. Models know the database field types. Put these together and you get a JSON Schema.
 
@@ -81,6 +81,19 @@ BlueprinterSchema.generate(UserSerializer, User)
   "required" => ["id", "created_at", "email", "name"],
   "additionalProperties" => false
 }
+```
+
+### Options and defaults
+
+```rb
+BlueprinterSchema.generate(
+  serializer,
+  model,
+  {
+    include_conditional_fields: true, # Whether or not to include conditional fields from the serializer
+    fallback_type: {} # Type when no DB column is found or type is unknown. E.g. { 'type' => 'object' }
+  }
+)
 ```
 
 ## Development
