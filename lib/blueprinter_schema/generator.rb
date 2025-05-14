@@ -2,7 +2,7 @@
 
 module BlueprinterSchema
   class Generator
-    def initialize(serializer, model, options = { include_conditional_fields: true, fallback_type: {} })
+    def initialize(serializer, model, options)
       @serializer = serializer
       @model = model
       @options = options
@@ -21,11 +21,11 @@ module BlueprinterSchema
     private
 
     def fields
-      @fields ||= @serializer.reflections[:default].fields
+      @fields ||= @serializer.reflections[@options[:view]].fields
     end
 
     def associations
-      @associations ||= @serializer.reflections[:default].associations
+      @associations ||= @serializer.reflections[@options[:view]].associations
     end
 
     def build_properties
