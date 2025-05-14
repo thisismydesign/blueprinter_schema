@@ -45,7 +45,8 @@ module BlueprinterSchema
     end
 
     def skip_field?(field)
-      !@options[:include_conditional_fields] && (field.options[:if] || field.options[:unless])
+      !@options[:include_conditional_fields] &&
+        (field.options[:if] || field.options[:unless] || field.options[:exclude_if_nil])
     end
 
     def build_required_fields
