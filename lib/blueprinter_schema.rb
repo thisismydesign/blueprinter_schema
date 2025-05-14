@@ -4,7 +4,7 @@ require_relative 'blueprinter_schema/version'
 
 module BlueprinterSchema
   class << self
-    def generate(serializer, model)
+    def generate(serializer, model, options = { include_conditional_fields: true, fallback_type: {} })
       views = serializer.reflections
       fields = views[:default].fields
       associations = views[:default].associations
@@ -12,7 +12,7 @@ module BlueprinterSchema
       {
         'type' => 'object',
         'title' => model.name,
-        'properties' => build_properties(fields, associations, model),
+        'properties' => build_properties(fields, associations, model, options),
         'required' => build_required_fields(fields),
         'additionalProperties' => false
       }
@@ -20,11 +20,13 @@ module BlueprinterSchema
 
     private
 
-    def build_properties(fields, associations, model)
+    def build_properties(fields, associations, model, options)
       properties = {}
 
       fields.each_value do |field|
-        properties[field.display_name.to_s] = field_to_json_schema(field, model)
+        next if skip_field?(field, options)
+
+        properties[field.display_name.to_s] = field_to_json_schema(field, model, options)
       end
 
       associations.each_value do |association|
@@ -34,25 +36,24 @@ module BlueprinterSchema
       properties
     end
 
+    def skip_field?(field, options)
+      !options[:include_conditional_fields] && (field.options[:if] || field.options[:unless])
+    end
+
     def build_required_fields(fields)
       fields.keys.map(&:to_s)
     end
 
-    def field_to_json_schema(field, model)
+    def field_to_json_schema(field, model, options)
       column = model.columns_hash[field.name.to_s]
 
-      if column
-        ar_column_to_json_schema(column)
-      else
-        # Non-database (e.g. computed) field, we don't know the schema type
-        {}
-      end
+      ar_column_to_json_schema(column) || options[:fallback_type]
     end
 
     # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
     def ar_column_to_json_schema(column)
-      case column.type
+      case column&.type
       when :string, :text
         build_json_schema_type('string', column.null)
       when :integer
@@ -67,9 +68,6 @@ module BlueprinterSchema
         build_json_schema_type('string', column.null, 'date-time')
       when :uuid
         build_json_schema_type('string', column.null, 'uuid')
-      else
-        # Unknown column type, we don't know the schema type
-        {}
       end
     end
     # rubocop:enable Metrics/MethodLength
