@@ -2,6 +2,8 @@
 
 ### Create JSON Schema from Blueprinter Serializers and ActiveRecord Models.
 
+Serializers define which fields are used. Models know the database field types. Put these together and you get a JSON Schema.
+
 ## Installation
 
 Add to your application's Gemfile:
