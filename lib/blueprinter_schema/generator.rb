@@ -2,11 +2,11 @@
 
 module BlueprinterSchema
   class Generator
-    def initialize(serializer:, model:, include_conditional_fields:, fallback_type:, view:)
+    def initialize(serializer:, model:, include_conditional_fields:, fallback_definition:, view:)
       @serializer = serializer
       @model = model
       @include_conditional_fields = include_conditional_fields
-      @fallback_type = fallback_type
+      @fallback_definition = fallback_definition
       @view = view
     end
 
@@ -60,7 +60,7 @@ module BlueprinterSchema
 
     # rubocop:disable Metrics/AbcSize
     def field_to_json_schema(field)
-      type_definition = @fallback_type.dup
+      type_definition = @fallback_definition.dup
 
       if field.options[:type]
         type_definition['type'] = field.options[:type]
@@ -121,7 +121,7 @@ module BlueprinterSchema
         serializer:,
         model:,
         include_conditional_fields: @include_conditional_fields,
-        fallback_type: @fallback_type,
+        fallback_definition: @fallback_definition,
         view: @view
       )
     end

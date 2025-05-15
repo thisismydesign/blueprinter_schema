@@ -8,9 +8,9 @@ module BlueprinterSchema
     serializer:,
     model: nil,
     include_conditional_fields: true,
-    fallback_type: {},
+    fallback_definition: {},
     view: :default
   )
-    Generator.new(serializer:, model:, include_conditional_fields:, fallback_type:, view:).generate
+    Generator.new(serializer:, model:, include_conditional_fields:, fallback_definition:, view:).generate
   end
 end
