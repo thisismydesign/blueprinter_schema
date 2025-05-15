@@ -21,8 +21,8 @@ RSpec.describe BlueprinterSchema do
       Class.new(Blueprinter::Base) do
         identifier :id
 
-        field :name, description: 'The name of the user'
-        fields :email, :created_at
+        fields :first_name, :last_name, :email, :created_at
+        field :full_name, description: 'The concatendated first and last name of the user', type: %w[string null]
 
         association :addresses, blueprint: address_serializer_local
       end
@@ -53,7 +53,8 @@ RSpec.describe BlueprinterSchema do
         def self.columns_hash
           {
             'id' => Struct.new(:type, :null).new(:integer, false),
-            'name' => Struct.new(:type, :null).new(:string, true),
+            'first_name' => Struct.new(:type, :null).new(:string, true),
+            'last_name' => Struct.new(:type, :null).new(:string, true),
             'email' => Struct.new(:type, :null).new(:string, false),
             'created_at' => Struct.new(:type, :null).new(:datetime, false)
           }
@@ -69,44 +70,52 @@ RSpec.describe BlueprinterSchema do
 
     # rubocop:disable RSpec/ExampleLength
     it 'generates a schema with the correct structure' do
-      expect(generate).to eq(
-        {
-          'type' => 'object',
-          'title' => 'User',
-          'properties' => {
-            'id' => {
-              'type' => 'integer'
-            },
-            'created_at' => {
-              'type' => 'string', 'format' => 'date-time'
-            },
-            'email' => {
-              'type' => 'string'
-            },
-            'name' => {
-              'type' => %w[string null],
-              'description' => 'The name of the user'
-            },
-            'addresses' => {
-              'type' => 'array',
-              'items' => {
-                'type' => 'object',
-                'title' => 'Address',
-                'properties' => {
-                  'id' => {
-                    'type' => 'integer'
-                  }, 'address' => {
-                    'type' => 'string'
-                  }
-                },
-                'required' => %w[id address],
-                'additionalProperties' => false
+      expect(generate).to match(
+        hash_including(
+          {
+            'type' => 'object',
+            'title' => 'User',
+            'properties' => {
+              'id' => {
+                'type' => 'integer'
+              },
+              'created_at' => {
+                'type' => 'string', 'format' => 'date-time'
+              },
+              'email' => {
+                'type' => 'string'
+              },
+              'full_name' => {
+                'type' => %w[string null],
+                'description' => 'The concatendated first and last name of the user'
+              },
+              'first_name' => {
+                'type' => %w[string null]
+              },
+              'last_name' => {
+                'type' => %w[string null]
+              },
+              'addresses' => {
+                'type' => 'array',
+                'items' => {
+                  'type' => 'object',
+                  'title' => 'Address',
+                  'properties' => {
+                    'id' => {
+                      'type' => 'integer'
+                    }, 'address' => {
+                      'type' => 'string'
+                    }
+                  },
+                  'required' => %w[id address],
+                  'additionalProperties' => false
+                }
               }
-            }
-          },
-          'required' => %w[id created_at email name],
-          'additionalProperties' => false
-        }
+            },
+            'required' => match_array(%w[id created_at email full_name first_name last_name]),
+            'additionalProperties' => false
+          }
+        )
       )
     end
     # rubocop:enable RSpec/ExampleLength

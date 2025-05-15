@@ -56,7 +56,12 @@ module BlueprinterSchema
     def field_to_json_schema(field)
       column = @model.columns_hash[field.name.to_s]
 
-      type = ar_column_to_json_schema(column) || @options[:fallback_type]
+      type = if field.options[:type]
+               { 'type' => field.options[:type] }
+             else
+               ar_column_to_json_schema(column) || @options[:fallback_type]
+             end
+
       type['description'] = field.options[:description] if field.options[:description]
       type
     end
