@@ -5,11 +5,9 @@ module BlueprinterSchema
     def initialize(serializer:, model:, include_conditional_fields:, fallback_type:, view:)
       @serializer = serializer
       @model = model
-      @options = {
-        include_conditional_fields:,
-        fallback_type:,
-        view:
-      }
+      @include_conditional_fields = include_conditional_fields
+      @fallback_type = fallback_type
+      @view = view
     end
 
     def generate
@@ -25,11 +23,11 @@ module BlueprinterSchema
     private
 
     def fields
-      @fields ||= @serializer.reflections[@options[:view]].fields
+      @fields ||= @serializer.reflections[@view].fields
     end
 
     def associations
-      @associations ||= @serializer.reflections[@options[:view]].associations
+      @associations ||= @serializer.reflections[@view].associations
     end
 
     def build_properties
@@ -49,7 +47,7 @@ module BlueprinterSchema
     end
 
     def skip_field?(field)
-      !@options[:include_conditional_fields] &&
+      !@include_conditional_fields &&
         (field.options[:if] || field.options[:unless] || field.options[:exclude_if_nil])
     end
 
@@ -63,7 +61,7 @@ module BlueprinterSchema
       type = if field.options[:type]
                { 'type' => field.options[:type] }
              else
-               ar_column_to_json_schema(column) || @options[:fallback_type]
+               ar_column_to_json_schema(column) || @fallback_type
              end
 
       type['description'] = field.options[:description] if field.options[:description]
@@ -117,9 +115,9 @@ module BlueprinterSchema
       BlueprinterSchema.generate(
         serializer:,
         model:,
-        include_conditional_fields: @options[:include_conditional_fields],
-        fallback_type: @options[:fallback_type],
-        view: @options[:view]
+        include_conditional_fields: @include_conditional_fields,
+        fallback_type: @fallback_type,
+        view: @view
       )
     end
   end
