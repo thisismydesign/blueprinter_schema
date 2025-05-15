@@ -9,3 +9,7 @@ AllCops:
 # Do not enforce documentation
 Style/Documentation:
   Enabled: false
+
+# Matching big hashes
+RSpec/ExampleLength:
+  Enabled: false

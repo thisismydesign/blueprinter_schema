@@ -11,13 +11,16 @@ module BlueprinterSchema
     end
 
     def generate
-      {
+      schema = {
         'type' => 'object',
-        'title' => @model.name,
         'properties' => build_properties,
         'required' => build_required_fields,
         'additionalProperties' => false
       }
+
+      schema['title'] = @model.name if @model
+
+      schema
     end
 
     private
@@ -55,18 +58,21 @@ module BlueprinterSchema
       fields.reject { |_, field| skip_field?(field) }.keys.map(&:to_s)
     end
 
+    # rubocop:disable Metrics/AbcSize
     def field_to_json_schema(field)
-      column = @model.columns_hash[field.name.to_s]
+      type_definition = @fallback_type.dup
 
-      type = if field.options[:type]
-               { 'type' => field.options[:type] }
-             else
-               ar_column_to_json_schema(column) || @fallback_type
-             end
+      if field.options[:type]
+        type_definition['type'] = field.options[:type]
+      elsif @model
+        column = @model.columns_hash[field.name.to_s]
+        type_definition = ar_column_to_json_schema(column)
+      end
 
-      type['description'] = field.options[:description] if field.options[:description]
-      type
+      type_definition['description'] = field.options[:description] if field.options[:description]
+      type_definition
     end
+    # rubocop:enable Metrics/AbcSize
 
     # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
@@ -102,11 +108,10 @@ module BlueprinterSchema
 
       return { 'type' => 'object' } unless blueprint_class
 
-      ar_association = @model.reflect_on_association(association.name)
-      is_collection = ar_association.collection?
-      association_model = ar_association.klass
+      ar_association = @model&.reflect_on_association(association.name)
+      is_collection = ar_association ? ar_association.collection? : association.options[:collection]
 
-      associated_schema = recursive_generate(blueprint_class, association_model)
+      associated_schema = recursive_generate(blueprint_class, ar_association&.klass)
 
       is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
     end

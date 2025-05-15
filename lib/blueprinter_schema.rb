@@ -6,7 +6,7 @@ require_relative 'blueprinter_schema/generator'
 module BlueprinterSchema
   def self.generate(
     serializer:,
-    model:,
+    model: nil,
     include_conditional_fields: true,
     fallback_type: {},
     view: :default
