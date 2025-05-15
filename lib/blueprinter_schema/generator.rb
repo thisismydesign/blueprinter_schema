@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 module BlueprinterSchema
+  class InvalidJsonSchemaType < StandardError; end
+
+  # rubocop:disable Metrics/ClassLength
   class Generator
     def initialize(serializer:, model:, include_conditional_fields:, fallback_definition:, view:)
       @serializer = serializer
@@ -63,7 +66,7 @@ module BlueprinterSchema
       type_definition = @fallback_definition.dup
 
       if field.options[:type]
-        type_definition['type'] = field.options[:type]
+        type_definition['type'] = ensure_valid_json_schema_types!(field)
       elsif @model
         column = @model.columns_hash[field.name.to_s]
         type_definition = ar_column_to_json_schema(column)
@@ -74,6 +77,16 @@ module BlueprinterSchema
       type_definition
     end
     # rubocop:enable Metrics/AbcSize
+
+    def ensure_valid_json_schema_types!(field)
+      types = [field.options[:type]].flatten
+
+      return field.options[:type] if types.all? do |type|
+        %w[string integer number boolean object array null].include?(type)
+      end
+
+      raise BlueprinterSchema::InvalidJsonSchemaType, "Invalid type: #{field.options[:type]}"
+    end
 
     # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
@@ -127,4 +140,5 @@ module BlueprinterSchema
       )
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

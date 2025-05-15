@@ -6,29 +6,79 @@ RSpec.describe BlueprinterSchema do
   end
 
   describe '.generate' do
-    subject(:generate) { described_class.generate(serializer: address_serializer) }
+    subject(:generate) { described_class.generate(serializer: user_serializer) }
 
-    let(:address_serializer) do
+    let(:user_serializer) do
       Class.new(Blueprinter::Base) do
-        identifier :id
-        field :address, type: %w[string null]
-        field :email, type: %w[string null], format: 'email'
+        field :email
       end
     end
 
-    it 'generates a schema with the correct structure' do
+    it 'generates json schema' do
       expect(generate).to match(
         hash_including(
           'type' => 'object',
           'properties' => {
-            'id' => {},
-            'address' => { 'type' => %w[string null] },
-            'email' => { 'type' => %w[string null], 'format' => 'email' }
+            'email' => {}
           },
-          'required' => %w[id address email],
+          'required' => %w[email],
           'additionalProperties' => false
         )
       )
+    end
+
+    context 'with custom field type' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :email, type: 'string'
+        end
+      end
+
+      it 'generates json schema with correct type' do
+        expect(generate).to match(
+          hash_including(
+            'type' => 'object',
+            'properties' => {
+              'email' => { 'type' => 'string' }
+            },
+            'required' => %w[email],
+            'additionalProperties' => false
+          )
+        )
+      end
+    end
+
+    context 'with an invalid custom field type' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :email, type: 'invalid'
+        end
+      end
+
+      it 'raises an error' do
+        expect { generate }.to raise_error(BlueprinterSchema::InvalidJsonSchemaType)
+      end
+    end
+
+    context 'with custom field format' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :email, type: 'string', format: 'email'
+        end
+      end
+
+      it 'generates json schema with correct format' do
+        expect(generate).to match(
+          hash_including(
+            'type' => 'object',
+            'properties' => {
+              'email' => { 'type' => 'string', 'format' => 'email' }
+            },
+            'required' => %w[email],
+            'additionalProperties' => false
+          )
+        )
+      end
     end
 
     context 'when association is provided' do
