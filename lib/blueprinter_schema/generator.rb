@@ -69,6 +69,7 @@ module BlueprinterSchema
         type_definition = ar_column_to_json_schema(column)
       end
 
+      type_definition['format'] = field.options[:format] if field.options[:format]
       type_definition['description'] = field.options[:description] if field.options[:description]
       type_definition
     end

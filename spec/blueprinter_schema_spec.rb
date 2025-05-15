@@ -12,6 +12,7 @@ RSpec.describe BlueprinterSchema do
       Class.new(Blueprinter::Base) do
         identifier :id
         field :address, type: %w[string null]
+        field :email, type: %w[string null], format: 'email'
       end
     end
 
@@ -19,8 +20,12 @@ RSpec.describe BlueprinterSchema do
       expect(generate).to match(
         hash_including(
           'type' => 'object',
-          'properties' => { 'id' => {}, 'address' => { 'type' => %w[string null] } },
-          'required' => %w[id address],
+          'properties' => {
+            'id' => {},
+            'address' => { 'type' => %w[string null] },
+            'email' => { 'type' => %w[string null], 'format' => 'email' }
+          },
+          'required' => %w[id address email],
           'additionalProperties' => false
         )
       )
@@ -28,6 +33,13 @@ RSpec.describe BlueprinterSchema do
 
     context 'when association is provided' do
       subject(:generate) { described_class.generate(serializer: user_serializer) }
+
+      let(:address_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :address, type: %w[string null]
+        end
+      end
 
       let(:user_serializer) do
         address_serializer_local = address_serializer
@@ -64,6 +76,13 @@ RSpec.describe BlueprinterSchema do
 
     context 'when model is provided' do
       subject(:generate) { described_class.generate(serializer: user_serializer, model: user_model) }
+
+      let(:address_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :address, type: %w[string null]
+        end
+      end
 
       let(:user_serializer) do
         address_serializer_local = address_serializer
