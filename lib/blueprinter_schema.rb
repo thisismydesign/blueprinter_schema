@@ -5,10 +5,12 @@ require_relative 'blueprinter_schema/generator'
 
 module BlueprinterSchema
   def self.generate(
-    serializer,
-    model,
-    options = { include_conditional_fields: true, fallback_type: {}, view: :default }
+    serializer:,
+    model:,
+    include_conditional_fields: true,
+    fallback_type: {},
+    view: :default
   )
-    Generator.new(serializer, model, options).generate
+    Generator.new(serializer:, model:, include_conditional_fields:, fallback_type:, view:).generate
   end
 end

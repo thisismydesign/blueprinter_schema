@@ -2,10 +2,14 @@
 
 module BlueprinterSchema
   class Generator
-    def initialize(serializer, model, options)
+    def initialize(serializer:, model:, include_conditional_fields:, fallback_type:, view:)
       @serializer = serializer
       @model = model
-      @options = options
+      @options = {
+        include_conditional_fields:,
+        fallback_type:,
+        view:
+      }
     end
 
     def generate
@@ -104,9 +108,19 @@ module BlueprinterSchema
       is_collection = ar_association.collection?
       association_model = ar_association.klass
 
-      associated_schema = BlueprinterSchema.generate(blueprint_class, association_model)
+      associated_schema = recursive_generate(blueprint_class, association_model)
 
       is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
+    end
+
+    def recursive_generate(serializer, model)
+      BlueprinterSchema.generate(
+        serializer:,
+        model:,
+        include_conditional_fields: @options[:include_conditional_fields],
+        fallback_type: @options[:fallback_type],
+        view: @options[:view]
+      )
     end
   end
 end

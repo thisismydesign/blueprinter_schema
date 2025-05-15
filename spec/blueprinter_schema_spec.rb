@@ -6,7 +6,7 @@ RSpec.describe BlueprinterSchema do
   end
 
   describe '.generate' do
-    subject(:generate) { described_class.generate(user_serializer, user_model) }
+    subject(:generate) { described_class.generate(serializer: user_serializer, model: user_model) }
 
     let(:address_serializer) do
       Class.new(Blueprinter::Base) do
