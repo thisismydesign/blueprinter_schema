@@ -1,8 +1,6 @@
 # BlueprinterSchema
 
-### Create JSON Schema from [Blueprinter](https://github.com/procore-oss/blueprinter) Serializers and ActiveRecord Models.
-
-Serializers define which fields are used. Models know the database field types. Put these together and you get a JSON Schema.
+#### Create JSON Schemas from [Blueprinter](https://github.com/procore-oss/blueprinter) Serializers.
 
 ## Installation
 
@@ -14,35 +12,54 @@ gem "blueprinter_schema"
 
 ## Usage
 
-With the folloing Models and Serializers:
 ```rb
-class Address < ApplicationRecord
-  belongs_to :user
+class UserSerializer < Blueprinter::Base
+  field :first_name, type: [:string, :null]
+  field :last_name, type: [:string, :null]
+  field :full_name, type: [:string, :null], description: "The concatendated first and last name."
+  field :email, type: :string, format: :email
+end
+
+BlueprinterSchema.generate(serializer: UserSerializer)
+```
+
+```rb
+{
+  "type" => "object",
+  "properties" => {
+    "first_name" => {
+      "type" => ["string", "null"]
+    },
+    "last_name" => {
+      "type" => ["string", "null"]
+    },
+    "full_name" => {
+      "type" => ["string", "null"],
+      "description" => "The concatendated first and last name."
+    },
+    "email" => {
+      "type" => "string",
+      "format" => "email"
+    }
+  },
+  "required" => ["first_name", "last_name", "full_name", "email"],
+  "additionalProperties" => false
+}
+```
+
+You can pass an ActiveRecord Model to automatically infer types from DB fields:
+
+```rb
+class UserSerializer < Blueprinter::Base
+  field :first_name
+  field :last_name
+  field :email
 end
 
 class User < ApplicationRecord
-  has_many :addresses
 end
 
-class AddressSerializer < Blueprinter::Base
-  identifier :id
-
-  field :address
-end
-
-class UserSerializer < Blueprinter::Base
-  identifier :id
-
-  field :name, description: 'The name of the user'
-  fields :email, :created_at
-
-  association :addresses, blueprint: AddressSerializer
-end
-```
-
-Generate JSON Schema:
-```rb
-BlueprinterSchema.generate(UserSerializer, User)
+BlueprinterSchema.generate(serializer: UserSerializer, model: User)
 ```
 
 ```rb
@@ -50,38 +67,74 @@ BlueprinterSchema.generate(UserSerializer, User)
   "type" => "object",
   "title" => "User",
   "properties" => {
-    "id" => {
-      "type" => "integer"
+    "first_name" => {
+      "type" => ["string", "null"]
     },
-    "created_at" => {
-      "type" => "string", "format" => "date-time"
+    "last_name" => {
+      "type" => ["string", "null"]
     },
     "email" => {
       "type" => "string"
-    },
-    "name" => {
-      "type" => ["string", "null"],
-      'description' => 'The name of the user'
+    }
+  },
+  "required" => ["first_name", "last_name", "email"],
+  "additionalProperties" => false
+}
+```
+
+You can use associations:
+
+```rb
+class UserSerializer < Blueprinter::Base
+  field :email, type: :string
+
+  association :addresses, blueprint: AddressSerializer, collection: true
+  association :profile, blueprint: ProfileSerializer
+end
+
+class AddressSerializer < Blueprinter::Base
+  field :address, type: :string
+end
+
+class ProfileSerializer < Blueprinter::Base
+  field :public, type: :boolean
+end
+
+BlueprinterSchema.generate(serializer: UserSerializer)
+```
+
+```rb
+{
+  "type" => "object",
+  "properties" => {
+    "email" => {
+      "type" => "string"
     },
     "addresses" => {
       "type" => "array",
       "items" => {
         "type" => "object",
-        "title" => "Address",
         "properties" => {
-          "id" => {
-            "type" => "integer"
-          },
           "address" => {
             "type" => "string"
           }
         },
-        "required" => ["id", "address"],
+        "required" => ["address"],
         "additionalProperties" => false
       }
+    },
+    "profile" => {
+      "type" => "object",
+      "properties" => {
+        "public" => {
+          "type" => "boolean"
+        }
+      },
+      "required" => ["public"],
+      "additionalProperties" => false
     }
   },
-  "required" => ["id", "created_at", "email", "name"],
+  "required" => ["email", "addresses", "profile"],
   "additionalProperties" => false
 }
 ```
@@ -90,13 +143,11 @@ BlueprinterSchema.generate(UserSerializer, User)
 
 ```rb
 BlueprinterSchema.generate(
-  serializer,
-  model,
-  {
-    include_conditional_fields: true, # Whether or not to include conditional fields from the serializer
-    fallback_type: {}, # Type when no DB column is found or type is unknown. E.g. { 'type' => 'object' }
-    view: :default # The Blueprint view to use
-  }
+  serializer:,
+  model: nil,
+  include_conditional_fields: true, # Whether or not to include conditional fields from the serializer
+  fallback_type: {}, # Type when no DB column or type definition is found. E.g. { 'type' => 'object' }
+  view: :default # The blueprint view to use
 )
 ```
 
