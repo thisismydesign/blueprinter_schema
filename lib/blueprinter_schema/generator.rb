@@ -5,10 +5,10 @@ module BlueprinterSchema
 
   # rubocop:disable Metrics/ClassLength
   class Generator
-    def initialize(serializer:, model:, include_conditional_fields:, fallback_definition:, view:)
+    def initialize(serializer:, model:, skip_conditional_fields:, fallback_definition:, view:)
       @serializer = serializer
       @model = model
-      @include_conditional_fields = include_conditional_fields
+      @skip_conditional_fields = skip_conditional_fields
       @fallback_definition = fallback_definition
       @view = view
     end
@@ -53,12 +53,14 @@ module BlueprinterSchema
     end
 
     def skip_field?(field)
-      !@include_conditional_fields &&
-        (field.options[:if] || field.options[:unless] || field.options[:exclude_if_nil])
+      @skip_conditional_fields && (field.options[:if] || field.options[:unless])
     end
 
     def build_required_fields
-      fields.reject { |_, field| skip_field?(field) }.keys.map(&:to_s)
+      fields
+        .reject { |_, field| field.options[:exclude_if_nil] }
+        .reject { |_, field| skip_field?(field) }
+        .keys.map(&:to_s)
     end
 
     # rubocop:disable Metrics/AbcSize
@@ -134,7 +136,7 @@ module BlueprinterSchema
       BlueprinterSchema.generate(
         serializer:,
         model:,
-        include_conditional_fields: @include_conditional_fields,
+        skip_conditional_fields: @skip_conditional_fields,
         fallback_definition: @fallback_definition,
         view: @view
       )

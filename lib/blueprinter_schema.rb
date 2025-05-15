@@ -7,10 +7,10 @@ module BlueprinterSchema
   def self.generate(
     serializer:,
     model: nil,
-    include_conditional_fields: true,
+    skip_conditional_fields: false,
     fallback_definition: {},
     view: :default
   )
-    Generator.new(serializer:, model:, include_conditional_fields:, fallback_definition:, view:).generate
+    Generator.new(serializer:, model:, skip_conditional_fields:, fallback_definition:, view:).generate
   end
 end
