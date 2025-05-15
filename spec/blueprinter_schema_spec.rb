@@ -30,7 +30,7 @@ RSpec.describe BlueprinterSchema do
     context 'with custom field type' do
       let(:user_serializer) do
         Class.new(Blueprinter::Base) do
-          field :email, type: 'string'
+          field :email, type: :string
         end
       end
 
@@ -39,7 +39,7 @@ RSpec.describe BlueprinterSchema do
           hash_including(
             'type' => 'object',
             'properties' => {
-              'email' => { 'type' => 'string' }
+              'email' => { 'type' => :string }
             },
             'required' => %w[email],
             'additionalProperties' => false

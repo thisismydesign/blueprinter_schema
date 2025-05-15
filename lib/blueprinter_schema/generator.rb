@@ -81,7 +81,7 @@ module BlueprinterSchema
     # rubocop:enable Metrics/AbcSize
 
     def ensure_valid_json_schema_types!(field)
-      types = [field.options[:type]].flatten
+      types = [field.options[:type]].flatten.map(&:to_s)
 
       return field.options[:type] if types.all? do |type|
         %w[string integer number boolean object array null].include?(type)
