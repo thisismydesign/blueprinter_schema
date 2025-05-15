@@ -27,13 +27,15 @@ end
 class AddressSerializer < Blueprinter::Base
   identifier :id
 
-  fields :address
+  field :address
 end
 
 class UserSerializer < Blueprinter::Base
   identifier :id
 
-  fields :name, :email, :created_at
+  field :name, description: 'The name of the user'
+  fields :email, :created_at
+
   association :addresses, blueprint: AddressSerializer
 end
 ```
@@ -58,7 +60,8 @@ BlueprinterSchema.generate(UserSerializer, User)
       "type" => "string"
     },
     "name" => {
-      "type" => ["string", "null"]
+      "type" => ["string", "null"],
+      'description' => 'The name of the user'
     },
     "addresses" => {
       "type" => "array",
