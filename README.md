@@ -47,7 +47,7 @@ BlueprinterSchema.generate(serializer: UserSerializer)
 }
 ```
 
-You can pass an ActiveRecord Model to automatically infer types from DB fields:
+### Pass an ActiveRecord Model to automatically infer types from DB fields:
 
 ```rb
 class UserSerializer < Blueprinter::Base
@@ -82,7 +82,7 @@ BlueprinterSchema.generate(serializer: UserSerializer, model: User)
 }
 ```
 
-You can use associations:
+### Use associations:
 
 ```rb
 class UserSerializer < Blueprinter::Base
