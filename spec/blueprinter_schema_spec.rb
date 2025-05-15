@@ -11,7 +11,7 @@ RSpec.describe BlueprinterSchema do
     let(:address_serializer) do
       Class.new(Blueprinter::Base) do
         identifier :id
-        fields :address
+        field :address
       end
     end
 
