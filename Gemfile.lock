@@ -2,6 +2,8 @@ PATH
   remote: .
   specs:
     blueprinter_schema (0.5.0)
+      activerecord
+      blueprinter
 
 GEM
   remote: https://rubygems.org/
@@ -122,8 +124,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord
-  blueprinter
   blueprinter_schema!
   irb
   rake (~> 13.0)

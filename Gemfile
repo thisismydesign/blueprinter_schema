@@ -13,7 +13,3 @@ gem 'rubocop', '~> 1.75', require: false
 gem 'rubocop-rake', require: false
 gem 'rubocop-rspec', require: false
 gem 'simplecov', require: false
-
-# Gem
-gem 'activerecord' # ActiveRecord
-gem 'blueprinter' # Serialization

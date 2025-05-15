@@ -20,7 +20,10 @@ RSpec.describe BlueprinterSchema do
 
       Class.new(Blueprinter::Base) do
         identifier :id
-        fields :name, :email, :created_at
+
+        field :name, description: 'The name of the user'
+        fields :email, :created_at
+
         association :addresses, blueprint: address_serializer_local
       end
     end
@@ -81,7 +84,8 @@ RSpec.describe BlueprinterSchema do
               'type' => 'string'
             },
             'name' => {
-              'type' => %w[string null]
+              'type' => %w[string null],
+              'description' => 'The name of the user'
             },
             'addresses' => {
               'type' => 'array',
