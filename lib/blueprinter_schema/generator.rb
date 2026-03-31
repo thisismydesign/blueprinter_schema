@@ -63,7 +63,6 @@ module BlueprinterSchema
         .keys.map(&:to_s)
     end
 
-    # rubocop:disable Metrics/AbcSize
     def field_to_json_schema(field)
       type_definition = @fallback_definition.dup
 
@@ -74,12 +73,16 @@ module BlueprinterSchema
         type_definition = ar_column_to_json_schema(column)
       end
 
-      type_definition['items'] = field.options[:items].deep_stringify_keys if field.options[:items]
-      type_definition['format'] = field.options[:format] if field.options[:format]
-      type_definition['description'] = field.options[:description] if field.options[:description]
+      merge_field_options(type_definition, field.options)
+    end
+
+    def merge_field_options(type_definition, options)
+      type_definition['enum'] = options[:enum] if options[:enum]
+      type_definition['items'] = options[:items].deep_stringify_keys if options[:items]
+      type_definition['format'] = options[:format] if options[:format]
+      type_definition['description'] = options[:description] if options[:description]
       type_definition
     end
-    # rubocop:enable Metrics/AbcSize
 
     def ensure_valid_json_schema_types!(field)
       types = [field.options[:type]].flatten.map(&:to_s)

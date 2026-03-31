@@ -18,6 +18,8 @@ class UserSerializer < Blueprinter::Base
   field :last_name, type: [:string, :null]
   field :full_name, type: [:string, :null], description: "The concatendated first and last name."
   field :email, type: :string, format: :email
+  field :role, type: :string, enum: ["user", "admin"]
+  field :tags, type: :array, items: { type: :string }
 end
 
 BlueprinterSchema.generate(serializer: UserSerializer)
@@ -40,9 +42,17 @@ BlueprinterSchema.generate(serializer: UserSerializer)
     "email" => {
       "type" => "string",
       "format" => "email"
+    },
+    "role" => {
+      "type" => "string",
+      "enum" => ["user", "admin"]
+    },
+    "tags" => {
+      "type" => "array",
+      "items" => { "type" => "string" }
     }
   },
-  "required" => ["first_name", "last_name", "full_name", "email"],
+  "required" => ["first_name", "last_name", "full_name", "email", "role", "tags"],
   "additionalProperties" => false
 }
 ```

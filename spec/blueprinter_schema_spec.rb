@@ -15,15 +15,13 @@ RSpec.describe BlueprinterSchema do
     end
 
     it 'generates json schema' do
-      expect(generate).to match(
-        hash_including(
-          'type' => 'object',
-          'properties' => {
-            'email' => {}
-          },
-          'required' => %w[email],
-          'additionalProperties' => false
-        )
+      expect(generate).to eq(
+        'type' => 'object',
+        'properties' => {
+          'email' => {}
+        },
+        'required' => %w[email],
+        'additionalProperties' => false
       )
     end
 
@@ -35,15 +33,13 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'generates json schema with correct type' do
-        expect(generate).to match(
-          hash_including(
-            'type' => 'object',
-            'properties' => {
-              'email' => { 'type' => :string }
-            },
-            'required' => %w[email],
-            'additionalProperties' => false
-          )
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'email' => { 'type' => :string }
+          },
+          'required' => %w[email],
+          'additionalProperties' => false
         )
       end
     end
@@ -56,15 +52,32 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'generates json schema with items' do
-        expect(generate).to match(
-          hash_including(
-            'type' => 'object',
-            'properties' => {
-              'tags' => { 'type' => :array, 'items' => { 'type' => :string } }
-            },
-            'required' => %w[tags],
-            'additionalProperties' => false
-          )
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'tags' => { 'type' => :array, 'items' => { 'type' => :string } }
+          },
+          'required' => %w[tags],
+          'additionalProperties' => false
+        )
+      end
+    end
+
+    context 'with enum option' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :availability_status, type: :string, enum: %w[available unavailable]
+        end
+      end
+
+      it 'generates json schema with enum' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'availability_status' => { 'type' => :string, 'enum' => %w[available unavailable] }
+          },
+          'required' => %w[availability_status],
+          'additionalProperties' => false
         )
       end
     end
@@ -89,15 +102,13 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'generates json schema with correct format' do
-        expect(generate).to match(
-          hash_including(
-            'type' => 'object',
-            'properties' => {
-              'email' => { 'type' => 'string', 'format' => 'email' }
-            },
-            'required' => %w[email],
-            'additionalProperties' => false
-          )
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'email' => { 'type' => 'string', 'format' => 'email' }
+          },
+          'required' => %w[email],
+          'additionalProperties' => false
         )
       end
     end
@@ -123,24 +134,25 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'generates a schema with the correct structure' do
-        expect(generate).to match(
-          hash_including(
-            'type' => 'object',
-            'properties' => {
-              'id' => {},
-              'addresses' => {
-                'type' => 'array',
-                'items' => {
-                  'type' => 'object',
-                  'properties' => { 'id' => {}, 'address' => { 'type' => %w[string null] } },
-                  'required' => %w[id address],
-                  'additionalProperties' => false
-                }
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'id' => {},
+            'addresses' => {
+              'type' => 'array',
+              'items' => {
+                'type' => 'object',
+                'properties' => {
+                  'id' => {},
+                  'address' => { 'type' => %w[string null] }
+                },
+                'required' => %w[id address],
+                'additionalProperties' => false
               }
-            },
-            'required' => %w[id],
-            'additionalProperties' => false
-          )
+            }
+          },
+          'required' => %w[id],
+          'additionalProperties' => false
         )
       end
     end
@@ -173,9 +185,27 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'resolves the view on the nested serializer' do
-        order_properties = generate.dig('properties', 'order', 'properties')
-
-        expect(order_properties.keys).to match_array(%w[id reference currency booking_ref])
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'id' => {},
+            'reference' => {},
+            'amount' => {},
+            'order' => {
+              'type' => 'object',
+              'properties' => {
+                'id' => {},
+                'reference' => {},
+                'currency' => {},
+                'booking_ref' => {}
+              },
+              'required' => %w[id booking_ref currency reference],
+              'additionalProperties' => false
+            }
+          },
+          'required' => %w[id amount reference],
+          'additionalProperties' => false
+        )
       end
     end
 
@@ -207,16 +237,26 @@ RSpec.describe BlueprinterSchema do
         end
       end
 
-      it 'includes fields from the default view' do
-        address_schema = generate.dig('properties', 'address', 'properties')
-
-        expect(address_schema.keys).to match_array(%w[id street])
-      end
-
-      it 'excludes fields from non-default views' do
-        address_schema = generate.dig('properties', 'address', 'properties')
-
-        expect(address_schema).not_to have_key('city')
+      it 'uses the default view for the nested serializer' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'id' => {},
+            'email' => {},
+            'name' => {},
+            'address' => {
+              'type' => 'object',
+              'properties' => {
+                'id' => {},
+                'street' => {}
+              },
+              'required' => %w[id street],
+              'additionalProperties' => false
+            }
+          },
+          'required' => %w[id email name],
+          'additionalProperties' => false
+        )
       end
     end
 
@@ -245,7 +285,6 @@ RSpec.describe BlueprinterSchema do
 
       let(:user_model) do
         Class.new(ActiveRecord::Base) do
-          # Needed to move the Address model inside the User model as a method to make it available for mocking
           # rubocop:disable Metrics/MethodLength
           def self.address_model = Class.new(ActiveRecord::Base) do
             def self.name
@@ -284,53 +323,49 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'generates a schema with the correct structure' do
-        expect(generate).to match(
-          hash_including(
-            {
-              'type' => 'object',
-              'title' => 'User',
-              'properties' => {
-                'id' => {
-                  'type' => 'integer'
-                },
-                'created_at' => {
-                  'type' => 'string', 'format' => 'date-time'
-                },
-                'email' => {
-                  'type' => 'string'
-                },
-                'full_name' => {
-                  'type' => %w[string null],
-                  'description' => 'The concatendated first and last name of the user'
-                },
-                'first_name' => {
-                  'type' => %w[string null]
-                },
-                'last_name' => {
-                  'type' => %w[string null]
-                },
-                'addresses' => {
-                  'type' => 'array',
-                  'items' => {
-                    'type' => 'object',
-                    'title' => 'Address',
-                    'properties' => {
-                      'id' => {
-                        'type' => 'integer'
-                      },
-                      'address' => {
-                        'type' => %w[string null]
-                      }
-                    },
-                    'required' => %w[id address],
-                    'additionalProperties' => false
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'User',
+          'properties' => {
+            'id' => {
+              'type' => 'integer'
+            },
+            'first_name' => {
+              'type' => %w[string null]
+            },
+            'last_name' => {
+              'type' => %w[string null]
+            },
+            'email' => {
+              'type' => 'string'
+            },
+            'created_at' => {
+              'type' => 'string', 'format' => 'date-time'
+            },
+            'full_name' => {
+              'type' => %w[string null],
+              'description' => 'The concatendated first and last name of the user'
+            },
+            'addresses' => {
+              'type' => 'array',
+              'items' => {
+                'type' => 'object',
+                'title' => 'Address',
+                'properties' => {
+                  'id' => {
+                    'type' => 'integer'
+                  },
+                  'address' => {
+                    'type' => %w[string null]
                   }
-                }
-              },
-              'required' => match_array(%w[id created_at email full_name first_name last_name]),
-              'additionalProperties' => false
+                },
+                'required' => %w[id address],
+                'additionalProperties' => false
+              }
             }
-          )
+          },
+          'required' => %w[id created_at email first_name full_name last_name],
+          'additionalProperties' => false
         )
       end
     end
