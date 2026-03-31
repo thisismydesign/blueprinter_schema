@@ -146,6 +146,8 @@ RSpec.describe BlueprinterSchema do
     end
 
     context 'when nested association specifies a view' do
+      subject(:generate) { described_class.generate(serializer: booking_serializer, view: :for_event) }
+
       let(:customer_serializer) do
         Class.new(Blueprinter::Base) do
           identifier :id
@@ -161,7 +163,7 @@ RSpec.describe BlueprinterSchema do
           fields :reference, :currency
           association :customer, blueprint: customer_serializer_local
 
-          view :for_booking do
+          view :for_booking do # rubocop:disable Lint/EmptyBlock
           end
 
           view :for_event do
@@ -183,8 +185,6 @@ RSpec.describe BlueprinterSchema do
           end
         end
       end
-
-      subject(:generate) { described_class.generate(serializer: booking_serializer, view: :for_event) }
 
       it 'resolves the view on the nested serializer' do
         expect(generate).to match(
@@ -218,6 +218,8 @@ RSpec.describe BlueprinterSchema do
     end
 
     context 'when nested serializer does not define a view' do
+      subject(:generate) { described_class.generate(serializer: user_serializer, view: :extended) }
+
       let(:address_serializer) do
         Class.new(Blueprinter::Base) do
           identifier :id
@@ -243,12 +245,15 @@ RSpec.describe BlueprinterSchema do
         end
       end
 
-      subject(:generate) { described_class.generate(serializer: user_serializer, view: :extended) }
-
-      it 'uses the default view for the nested serializer' do
+      it 'includes fields from the default view' do
         address_schema = generate.dig('properties', 'address', 'properties')
 
         expect(address_schema.keys).to match_array(%w[id street])
+      end
+
+      it 'excludes fields from non-default views' do
+        address_schema = generate.dig('properties', 'address', 'properties')
+
         expect(address_schema).not_to have_key('city')
       end
     end
