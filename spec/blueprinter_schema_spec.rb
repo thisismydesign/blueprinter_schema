@@ -48,6 +48,27 @@ RSpec.describe BlueprinterSchema do
       end
     end
 
+    context 'with items option for array field' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :tags, type: :array, items: { type: :string }
+        end
+      end
+
+      it 'generates json schema with items' do
+        expect(generate).to match(
+          hash_including(
+            'type' => 'object',
+            'properties' => {
+              'tags' => { 'type' => :array, 'items' => { 'type' => :string } }
+            },
+            'required' => %w[tags],
+            'additionalProperties' => false
+          )
+        )
+      end
+    end
+
     context 'with an invalid custom field type' do
       let(:user_serializer) do
         Class.new(Blueprinter::Base) do
