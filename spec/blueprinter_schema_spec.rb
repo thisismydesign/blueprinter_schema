@@ -124,6 +124,114 @@ RSpec.describe BlueprinterSchema do
       end
     end
 
+    context 'when nested association specifies a view' do
+      let(:customer_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          fields :first_name, :last_name, :email
+        end
+      end
+
+      let(:order_serializer) do
+        customer_serializer_local = customer_serializer
+
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          fields :reference, :currency
+          association :customer, blueprint: customer_serializer_local
+
+          view :for_booking do
+          end
+
+          view :for_event do
+            fields :total, :balance
+            association :customer, blueprint: customer_serializer_local
+          end
+        end
+      end
+
+      let(:booking_serializer) do
+        order_serializer_local = order_serializer
+
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          fields :reference, :amount
+
+          view :for_event do
+            association :order, blueprint: order_serializer_local, view: :for_booking
+          end
+        end
+      end
+
+      subject(:generate) { described_class.generate(serializer: booking_serializer, view: :for_event) }
+
+      it 'resolves the view on the nested serializer' do
+        expect(generate).to match(
+          hash_including(
+            'type' => 'object',
+            'properties' => hash_including(
+              'id' => {},
+              'reference' => {},
+              'amount' => {},
+              'order' => hash_including(
+                'type' => 'object',
+                'properties' => hash_including(
+                  'id' => {},
+                  'reference' => {},
+                  'currency' => {},
+                  'customer' => hash_including(
+                    'type' => 'object',
+                    'properties' => hash_including(
+                      'id' => {},
+                      'first_name' => {},
+                      'last_name' => {},
+                      'email' => {}
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      end
+    end
+
+    context 'when nested serializer does not define a view' do
+      let(:address_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :street
+
+          view :extended do
+            field :city
+          end
+        end
+      end
+
+      let(:user_serializer) do
+        address_serializer_local = address_serializer
+
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :email
+
+          view :extended do
+            field :name
+            association :address, blueprint: address_serializer_local
+          end
+        end
+      end
+
+      subject(:generate) { described_class.generate(serializer: user_serializer, view: :extended) }
+
+      it 'uses the default view for the nested serializer' do
+        address_schema = generate.dig('properties', 'address', 'properties')
+
+        expect(address_schema.keys).to match_array(%w[id street])
+        expect(address_schema).not_to have_key('city')
+      end
+    end
+
     context 'when model is provided' do
       subject(:generate) { described_class.generate(serializer: user_serializer, model: user_model) }
 

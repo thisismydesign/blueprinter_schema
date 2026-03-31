@@ -127,18 +127,19 @@ module BlueprinterSchema
       ar_association = @model&.reflect_on_association(association.name)
       is_collection = ar_association ? ar_association.collection? : association.options[:collection]
 
-      associated_schema = recursive_generate(blueprint_class, ar_association&.klass)
+      view = association.options[:view] || :default
+      associated_schema = recursive_generate(blueprint_class, ar_association&.klass, view)
 
       is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
     end
 
-    def recursive_generate(serializer, model)
+    def recursive_generate(serializer, model, view)
       BlueprinterSchema.generate(
         serializer:,
         model:,
         skip_conditional_fields: @skip_conditional_fields,
         fallback_definition: @fallback_definition,
-        view: @view
+        view:
       )
     end
   end
