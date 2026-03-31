@@ -369,5 +369,113 @@ RSpec.describe BlueprinterSchema do
         )
       end
     end
+
+    context 'when optional belongs_to association is provided' do
+      subject(:generate) { described_class.generate(serializer: user_serializer, model: user_model) }
+
+      let(:account_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :name, type: :string
+        end
+      end
+
+      let(:user_serializer) do
+        account_serializer_local = account_serializer
+
+        Class.new(Blueprinter::Base) do
+          identifier :id
+
+          fields :first_name, :last_name, :email, :created_at
+          field :full_name, description: 'The concatendated first and last name of the user', type: %w[string null]
+
+          association :account, blueprint: account_serializer_local, optional: true
+        end
+      end
+
+      let(:user_model) do
+        Class.new(ActiveRecord::Base) do
+          # rubocop:disable Metrics/MethodLength
+          def self.account_model = Class.new(ActiveRecord::Base) do
+            def self.name
+              'Account'
+            end
+
+            def self.columns_hash
+              {
+                'id' => Struct.new(:type, :null).new(:integer, false),
+                'name' => Struct.new(:type, :null).new(:string, false)
+              }
+            end
+          end
+          # rubocop:enable Metrics/MethodLength
+
+          def self.name
+            'User'
+          end
+
+          def self.columns_hash
+            {
+              'id' => Struct.new(:type, :null).new(:integer, false),
+              'first_name' => Struct.new(:type, :null).new(:string, true),
+              'last_name' => Struct.new(:type, :null).new(:string, true),
+              'email' => Struct.new(:type, :null).new(:string, false),
+              'created_at' => Struct.new(:type, :null).new(:datetime, false),
+              'account_id' => Struct.new(:type, :null).new(:integer, true)
+            }
+          end
+
+          def self.reflect_on_association(name)
+            return unless name == :account
+
+            Struct.new(:collection?, :klass).new(false, account_model)
+          end
+        end
+      end
+
+      it 'generates a schema with optional object type' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'User',
+          'properties' => {
+            'id' => {
+              'type' => 'integer'
+            },
+            'first_name' => {
+              'type' => %w[string null]
+            },
+            'last_name' => {
+              'type' => %w[string null]
+            },
+            'email' => {
+              'type' => 'string'
+            },
+            'created_at' => {
+              'type' => 'string', 'format' => 'date-time'
+            },
+            'full_name' => {
+              'type' => %w[string null],
+              'description' => 'The concatendated first and last name of the user'
+            },
+            'account' => {
+              'type' => %w[object null],
+              'title' => 'Account',
+              'properties' => {
+                'id' => {
+                  'type' => 'integer'
+                },
+                'name' => {
+                  'type' => :string
+                }
+              },
+              'required' => %w[id name],
+              'additionalProperties' => false
+            }
+          },
+          'required' => %w[id created_at email first_name full_name last_name],
+          'additionalProperties' => false
+        )
+      end
+    end
   end
 end

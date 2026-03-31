@@ -5,17 +5,18 @@ module BlueprinterSchema
 
   # rubocop:disable Metrics/ClassLength
   class Generator
-    def initialize(serializer:, model:, skip_conditional_fields:, fallback_definition:, view:)
+    def initialize(serializer:, model:, skip_conditional_fields:, fallback_definition:, view:, type:) # rubocop:disable Metrics/ParameterLists
       @serializer = serializer
       @model = model
       @skip_conditional_fields = skip_conditional_fields
       @fallback_definition = fallback_definition
       @view = view
+      @type = type
     end
 
     def generate
       schema = {
-        'type' => 'object',
+        'type' => @type,
         'properties' => build_properties,
         'required' => build_required_fields,
         'additionalProperties' => false
@@ -123,7 +124,7 @@ module BlueprinterSchema
       type
     end
 
-    def association_to_json_schema(association)
+    def association_to_json_schema(association) # rubocop:disable Metrics/CyclomaticComplexity
       blueprint_class = association.options[:blueprint]
 
       return { 'type' => 'object' } unless blueprint_class
@@ -132,18 +133,20 @@ module BlueprinterSchema
       is_collection = ar_association ? ar_association.collection? : association.options[:collection]
 
       view = association.options[:view] || :default
-      associated_schema = recursive_generate(blueprint_class, ar_association&.klass, view)
+      type = association.options[:optional] ? %w[object null] : 'object'
+      associated_schema = recursive_generate(blueprint_class, ar_association&.klass, view, type:)
 
       is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
     end
 
-    def recursive_generate(serializer, model, view)
+    def recursive_generate(serializer, model, view, type:)
       BlueprinterSchema.generate(
         serializer:,
         model:,
         skip_conditional_fields: @skip_conditional_fields,
         fallback_definition: @fallback_definition,
-        view:
+        view:,
+        type:
       )
     end
   end

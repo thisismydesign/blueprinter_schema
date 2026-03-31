@@ -100,6 +100,7 @@ class UserSerializer < Blueprinter::Base
 
   association :addresses, blueprint: AddressSerializer, collection: true
   association :profile, blueprint: ProfileSerializer
+  association :account, blueprint: AccountSerializer, optional: true
 end
 
 class AddressSerializer < Blueprinter::Base
@@ -108,6 +109,10 @@ end
 
 class ProfileSerializer < Blueprinter::Base
   field :public, type: :boolean
+end
+
+class AccountSerializer < Blueprinter::Base
+  field :name, type: :string
 end
 
 BlueprinterSchema.generate(serializer: UserSerializer)
@@ -142,6 +147,16 @@ BlueprinterSchema.generate(serializer: UserSerializer)
       },
       "required" => ["public"],
       "additionalProperties" => false
+    },
+    "account" => {
+      "type" => ["object", "null"],
+      "properties" => {
+        "name" => {
+          "type" => "string"
+        }
+      },
+      "required" => ["name"],
+      "additionalProperties" => false
     }
   },
   "required" => ["email", "addresses", "profile"],
@@ -157,7 +172,8 @@ BlueprinterSchema.generate(
   model: nil,
   include_conditional_fields: true, # Whether or not to include conditional fields from the serializer
   fallback_definition: {}, # Type when no DB column or type definition is found. E.g. { 'type' => 'object' }
-  view: :default # The blueprint view to use
+  view: :default, # The blueprint view to use
+  type: "object" # Root type
 )
 ```
 
