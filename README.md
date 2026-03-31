@@ -156,7 +156,7 @@ BlueprinterSchema.generate(
   serializer:,
   model: nil,
   include_conditional_fields: true, # Whether or not to include conditional fields from the serializer
-  fallback_type: {}, # Type when no DB column or type definition is found. E.g. { 'type' => 'object' }
+  fallback_definition: {}, # Type when no DB column or type definition is found. E.g. { 'type' => 'object' }
   view: :default # The blueprint view to use
 )
 ```
