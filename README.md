@@ -156,14 +156,8 @@ BlueprinterSchema.generate(
 Devcontainer / Codespaces / Native
 
 ```sh
+mise install
 bin/setup
-```
-
-Docker
-
-```sh
-docker compose up -d
-docker compose exec ruby bin/setup
 ```
 
 Then, run `bundle exec rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

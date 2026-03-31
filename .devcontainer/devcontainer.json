@@ -1,6 +1,6 @@
 {
   "name": "blueprinter_schema",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": "../compose.yml",
   "service": "ruby",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
