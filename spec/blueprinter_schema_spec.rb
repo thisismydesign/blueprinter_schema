@@ -148,27 +148,13 @@ RSpec.describe BlueprinterSchema do
     context 'when nested association specifies a view' do
       subject(:generate) { described_class.generate(serializer: booking_serializer, view: :for_event) }
 
-      let(:customer_serializer) do
-        Class.new(Blueprinter::Base) do
-          identifier :id
-          fields :first_name, :last_name, :email
-        end
-      end
-
       let(:order_serializer) do
-        customer_serializer_local = customer_serializer
-
         Class.new(Blueprinter::Base) do
           identifier :id
           fields :reference, :currency
-          association :customer, blueprint: customer_serializer_local
 
-          view :for_booking do # rubocop:disable Lint/EmptyBlock
-          end
-
-          view :for_event do
-            fields :total, :balance
-            association :customer, blueprint: customer_serializer_local
+          view :for_booking do
+            field :booking_ref
           end
         end
       end
@@ -187,33 +173,9 @@ RSpec.describe BlueprinterSchema do
       end
 
       it 'resolves the view on the nested serializer' do
-        expect(generate).to match(
-          hash_including(
-            'type' => 'object',
-            'properties' => hash_including(
-              'id' => {},
-              'reference' => {},
-              'amount' => {},
-              'order' => hash_including(
-                'type' => 'object',
-                'properties' => hash_including(
-                  'id' => {},
-                  'reference' => {},
-                  'currency' => {},
-                  'customer' => hash_including(
-                    'type' => 'object',
-                    'properties' => hash_including(
-                      'id' => {},
-                      'first_name' => {},
-                      'last_name' => {},
-                      'email' => {}
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
+        order_properties = generate.dig('properties', 'order', 'properties')
+
+        expect(order_properties.keys).to match_array(%w[id reference currency booking_ref])
       end
     end
 
