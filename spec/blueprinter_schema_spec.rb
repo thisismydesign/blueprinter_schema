@@ -641,6 +641,59 @@ RSpec.describe BlueprinterSchema do
       end
     end
 
+    context 'when an ActiveModel model declares an association' do
+      subject(:generate) { described_class.generate(serializer: order_serializer, model: order_model) }
+
+      let(:line_item_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :sku, type: :string
+        end
+      end
+
+      let(:order_serializer) do
+        line_item_serializer_local = line_item_serializer
+
+        Class.new(Blueprinter::Base) do
+          field :reference, type: :string
+          association :line_item, blueprint: line_item_serializer_local
+        end
+      end
+
+      let(:order_model) do
+        Class.new do
+          include ActiveModel::Model
+          include ActiveModel::Attributes
+
+          attribute :reference, :string
+          attribute :line_item
+
+          def self.name
+            'Order'
+          end
+        end
+      end
+
+      it 'builds the nested association schema' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Order',
+          'properties' => {
+            'reference' => { 'type' => :string },
+            'line_item' => {
+              'type' => 'object',
+              'properties' => {
+                'sku' => { 'type' => :string }
+              },
+              'required' => %w[sku],
+              'additionalProperties' => false
+            }
+          },
+          'required' => %w[reference line_item],
+          'additionalProperties' => false
+        )
+      end
+    end
+
     context 'when a Dry::Struct is provided as the model' do
       subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
 

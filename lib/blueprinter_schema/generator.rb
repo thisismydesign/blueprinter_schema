@@ -144,12 +144,12 @@ module BlueprinterSchema
       type
     end
 
-    def association_to_json_schema(association) # rubocop:disable Metrics/CyclomaticComplexity
+    def association_to_json_schema(association)
       blueprint_class = association.options[:blueprint]
 
       return { 'type' => 'object' } unless blueprint_class
 
-      ar_association = @model&.reflect_on_association(association.name)
+      ar_association = @model.try(:reflect_on_association, association.name)
       is_collection = ar_association ? ar_association.collection? : association.options[:collection]
 
       view = association.options[:view] || :default
