@@ -521,5 +521,46 @@ RSpec.describe BlueprinterSchema do
         )
       end
     end
+
+    context 'when an ActiveModel (tableless) model is provided' do
+      subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
+
+      let(:restrictions_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :min_units
+          field :max_units
+          field :label, type: %w[string null]
+        end
+      end
+
+      let(:restrictions_model) do
+        Class.new do
+          include ActiveModel::Model
+          include ActiveModel::Attributes
+
+          attribute :min_units, :integer
+          attribute :max_units, :integer
+          attribute :label, :string
+
+          def self.name
+            'Restrictions'
+          end
+        end
+      end
+
+      it 'infers scalar types from attributes, defaults to non-null, and lets the serializer override' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Restrictions',
+          'properties' => {
+            'min_units' => { 'type' => 'integer' },
+            'max_units' => { 'type' => 'integer' },
+            'label' => { 'type' => %w[string null] }
+          },
+          'required' => %w[label max_units min_units],
+          'additionalProperties' => false
+        )
+      end
+    end
   end
 end

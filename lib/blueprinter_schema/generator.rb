@@ -81,11 +81,21 @@ module BlueprinterSchema
       if field.options[:type]
         type_definition['type'] = ensure_valid_json_schema_types!(field)
       elsif @model
-        column = @model.columns_hash[field.name.to_s]
-        type_definition = ar_column_to_json_schema(column)
+        type_definition = model_attribute_to_json_schema(field.name.to_s)
       end
 
       merge_field_options(type_definition, field.options)
+    end
+
+    def model_attribute_to_json_schema(name)
+      if @model.respond_to?(:columns_hash)
+        column = @model.columns_hash[name]
+        type_to_json_schema(column&.type, column&.null)
+      elsif @model.respond_to?(:type_for_attribute)
+        type_to_json_schema(@model.type_for_attribute(name)&.type, false)
+      else
+        @fallback_definition.dup
+      end
     end
 
     def merge_field_options(type_definition, options)
@@ -108,22 +118,24 @@ module BlueprinterSchema
 
     # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/CyclomaticComplexity
-    def ar_column_to_json_schema(column)
-      case column&.type
+    def type_to_json_schema(type, null)
+      case type
       when :string, :text
-        build_json_schema_type('string', column.null)
+        build_json_schema_type('string', null)
       when :integer
-        build_json_schema_type('integer', column.null)
+        build_json_schema_type('integer', null)
       when :float, :decimal
-        build_json_schema_type('number', column.null)
+        build_json_schema_type('number', null)
       when :boolean
-        build_json_schema_type('boolean', column.null)
+        build_json_schema_type('boolean', null)
       when :date
-        build_json_schema_type('string', column.null, 'date')
+        build_json_schema_type('string', null, 'date')
       when :datetime, :timestamp
-        build_json_schema_type('string', column.null, 'date-time')
+        build_json_schema_type('string', null, 'date-time')
       when :uuid
-        build_json_schema_type('string', column.null, 'uuid')
+        build_json_schema_type('string', null, 'uuid')
+      else
+        @fallback_definition.dup
       end
     end
     # rubocop:enable Metrics/MethodLength

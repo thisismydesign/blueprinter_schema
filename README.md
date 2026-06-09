@@ -177,6 +177,49 @@ BlueprinterSchema.generate(
 )
 ```
 
+### Active Model Support
+
+```rb
+class Restrictions
+  include ActiveModel::Model
+  include ActiveModel::Attributes
+
+  attribute :min_units, :integer
+  attribute :max_units, :integer
+  attribute :label, :string
+end
+
+class RestrictionsSerializer < Blueprinter::Base
+  field :min_units
+  field :max_units
+  field :label, type: [:string, :null]
+end
+
+BlueprinterSchema.generate(serializer: RestrictionsSerializer, model: Restrictions)
+```
+
+```rb
+{
+  "type" => "object",
+  "title" => "Restrictions",
+  "properties" => {
+    "min_units" => {
+      "type" => "integer"
+    },
+    "max_units" => {
+      "type" => "integer"
+    },
+    "label" => {
+      "type" => ["string", "null"]
+    }
+  },
+  "required" => ["max_units", "min_units", "label"],
+  "additionalProperties" => false
+}
+```
+
+Note: Attributes are assumed to be non-null. If an attribute is nullable, specify it explicitly in the serializer.
+
 ## Development
 
 Devcontainer / Codespaces / Native
