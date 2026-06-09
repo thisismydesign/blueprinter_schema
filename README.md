@@ -195,22 +195,46 @@ class RestrictionsSerializer < Blueprinter::Base
   field :max_units
 end
 
-BlueprinterSchema.generate(serializer: RestrictionsSerializer, model: Restrictions)
+class Product
+  include ActiveModel::Model
+  include ActiveModel::Attributes
+
+  attribute :reference, :string
+  attribute :restrictions
+end
+
+class ProductSerializer < Blueprinter::Base
+  field :reference
+  association :restrictions, blueprint: RestrictionsSerializer, model: Restrictions
+end
+
+BlueprinterSchema.generate(serializer: ProductSerializer, model: Product)
 ```
 
 ```rb
 {
   "type" => "object",
-  "title" => "Restrictions",
+  "title" => "Product",
   "properties" => {
-    "min_units" => {
-      "type" => "integer"
+    "reference" => {
+      "type" => ["string", "null"]
     },
-    "max_units" => {
-      "type" => ["integer", "null"]
+    "restrictions" => {
+      "type" => "object",
+      "title" => "Restrictions",
+      "properties" => {
+        "min_units" => {
+          "type" => "integer"
+        },
+        "max_units" => {
+          "type" => ["integer", "null"]
+        }
+      },
+      "required" => ["max_units", "min_units"],
+      "additionalProperties" => false
     }
   },
-  "required" => ["max_units", "min_units"],
+  "required" => ["reference", "restrictions"],
   "additionalProperties" => false
 }
 ```

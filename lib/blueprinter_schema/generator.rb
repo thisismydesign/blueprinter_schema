@@ -150,13 +150,24 @@ module BlueprinterSchema
       return { 'type' => 'object' } unless blueprint_class
 
       ar_association = @model.try(:reflect_on_association, association.name)
-      is_collection = ar_association ? ar_association.collection? : association.options[:collection]
-
       view = association.options[:view] || :default
       type = association.options[:optional] ? %w[object null] : 'object'
-      associated_schema = recursive_generate(blueprint_class, ar_association&.klass, view, type:)
+      model = association_model(association, ar_association)
+      associated_schema = recursive_generate(blueprint_class, model, view, type:)
 
-      is_collection ? { 'type' => 'array', 'items' => associated_schema } : associated_schema
+      wrap_collection(associated_schema, association_collection?(association, ar_association))
+    end
+
+    def association_model(association, ar_association)
+      ar_association&.klass || association.options[:model]
+    end
+
+    def association_collection?(association, ar_association)
+      ar_association ? ar_association.collection? : association.options[:collection]
+    end
+
+    def wrap_collection(schema, is_collection)
+      is_collection ? { 'type' => 'array', 'items' => schema } : schema
     end
 
     def recursive_generate(serializer, model, view, type:)

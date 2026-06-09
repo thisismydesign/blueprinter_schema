@@ -694,6 +694,77 @@ RSpec.describe BlueprinterSchema do
       end
     end
 
+    context 'when an ActiveModel model has a nested ActiveModel association' do
+      subject(:generate) { described_class.generate(serializer: product_serializer, model: product_model) }
+
+      let(:restrictions_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :min_units
+          field :max_units
+        end
+      end
+
+      let(:product_serializer) do
+        restrictions_serializer_local = restrictions_serializer
+        restrictions_model_local = restrictions_model
+
+        Class.new(Blueprinter::Base) do
+          field :reference, type: :string
+          association :restrictions, blueprint: restrictions_serializer_local, model: restrictions_model_local
+        end
+      end
+
+      let(:restrictions_model) do
+        Class.new do
+          include ActiveModel::Model
+          include ActiveModel::Attributes
+
+          attribute :min_units, :integer
+          attribute :max_units, :integer
+
+          def self.name
+            'Restrictions'
+          end
+        end
+      end
+
+      let(:product_model) do
+        Class.new do
+          include ActiveModel::Model
+          include ActiveModel::Attributes
+
+          attribute :reference, :string
+          attribute :restrictions
+
+          def self.name
+            'Product'
+          end
+        end
+      end
+
+      it 'infers nested field types from the nested ActiveModel given via the model option' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Product',
+          'properties' => {
+            'reference' => { 'type' => :string },
+            'restrictions' => {
+              'type' => 'object',
+              'title' => 'Restrictions',
+              'properties' => {
+                'min_units' => { 'type' => %w[integer null] },
+                'max_units' => { 'type' => %w[integer null] }
+              },
+              'required' => %w[max_units min_units],
+              'additionalProperties' => false
+            }
+          },
+          'required' => %w[reference restrictions],
+          'additionalProperties' => false
+        )
+      end
+    end
+
     context 'when a Dry::Struct is provided as the model' do
       subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
 
