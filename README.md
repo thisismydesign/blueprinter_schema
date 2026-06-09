@@ -159,7 +159,7 @@ BlueprinterSchema.generate(serializer: UserSerializer)
       "additionalProperties" => false
     }
   },
-  "required" => ["email", "addresses", "profile"],
+  "required" => ["email", "addresses", "profile", "account"],
   "additionalProperties" => false
 }
 ```

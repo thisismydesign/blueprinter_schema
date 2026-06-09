@@ -151,6 +151,50 @@ RSpec.describe BlueprinterSchema do
               }
             }
           },
+          'required' => %w[id addresses],
+          'additionalProperties' => false
+        )
+      end
+    end
+
+    context 'when association is marked exclude_if_nil' do
+      subject(:generate) { described_class.generate(serializer: user_serializer) }
+
+      let(:address_serializer) do
+        Class.new(Blueprinter::Base) do
+          identifier :id
+          field :address, type: %w[string null]
+        end
+      end
+
+      let(:user_serializer) do
+        address_serializer_local = address_serializer
+
+        Class.new(Blueprinter::Base) do
+          identifier :id
+
+          association :addresses, blueprint: address_serializer_local, collection: true, exclude_if_nil: true
+        end
+      end
+
+      it 'excludes the association from the required list' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'id' => {},
+            'addresses' => {
+              'type' => 'array',
+              'items' => {
+                'type' => 'object',
+                'properties' => {
+                  'id' => {},
+                  'address' => { 'type' => %w[string null] }
+                },
+                'required' => %w[id address],
+                'additionalProperties' => false
+              }
+            }
+          },
           'required' => %w[id],
           'additionalProperties' => false
         )
@@ -203,7 +247,7 @@ RSpec.describe BlueprinterSchema do
               'additionalProperties' => false
             }
           },
-          'required' => %w[id amount reference],
+          'required' => %w[id amount reference order],
           'additionalProperties' => false
         )
       end
@@ -254,7 +298,7 @@ RSpec.describe BlueprinterSchema do
               'additionalProperties' => false
             }
           },
-          'required' => %w[id email name],
+          'required' => %w[id email name address],
           'additionalProperties' => false
         )
       end
@@ -364,7 +408,7 @@ RSpec.describe BlueprinterSchema do
               }
             }
           },
-          'required' => %w[id created_at email first_name full_name last_name],
+          'required' => %w[id created_at email first_name full_name last_name addresses],
           'additionalProperties' => false
         )
       end
@@ -472,7 +516,7 @@ RSpec.describe BlueprinterSchema do
               'additionalProperties' => false
             }
           },
-          'required' => %w[id created_at email first_name full_name last_name],
+          'required' => %w[id created_at email first_name full_name last_name account],
           'additionalProperties' => false
         )
       end

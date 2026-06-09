@@ -58,10 +58,21 @@ module BlueprinterSchema
     end
 
     def build_required_fields
+      (required_field_names + required_association_names).map(&:to_s)
+    end
+
+    def required_field_names
       fields
         .reject { |_, field| field.options[:exclude_if_nil] }
         .reject { |_, field| skip_field?(field) }
-        .keys.map(&:to_s)
+        .keys
+    end
+
+    def required_association_names
+      associations
+        .reject { |_, association| association.options[:exclude_if_nil] }
+        .reject { |_, association| skip_field?(association) }
+        .keys
     end
 
     def field_to_json_schema(field)
