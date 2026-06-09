@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'blueprinter_schema/version'
+require_relative 'blueprinter_schema/model_attributes'
 require_relative 'blueprinter_schema/generator'
 
 module BlueprinterSchema

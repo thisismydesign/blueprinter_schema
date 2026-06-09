@@ -17,3 +17,4 @@ gem 'simplecov', require: false
 # Gem
 gem 'activerecord'
 gem 'blueprinter'
+gem 'dry-struct'

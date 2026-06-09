@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'dry/struct'
+
 RSpec.describe BlueprinterSchema do
   it 'has a version number' do
     expect(BlueprinterSchema::VERSION).not_to be_nil
@@ -529,7 +531,7 @@ RSpec.describe BlueprinterSchema do
         Class.new(Blueprinter::Base) do
           field :min_units
           field :max_units
-          field :label, type: %w[string null]
+          field :label
         end
       end
 
@@ -542,22 +544,133 @@ RSpec.describe BlueprinterSchema do
           attribute :max_units, :integer
           attribute :label, :string
 
+          validates :min_units, presence: true
+
           def self.name
             'Restrictions'
           end
         end
       end
 
-      it 'infers scalar types from attributes, defaults to non-null, and lets the serializer override' do
+      it 'infers types from attributes and nullability from presence validations' do
         expect(generate).to eq(
           'type' => 'object',
           'title' => 'Restrictions',
           'properties' => {
             'min_units' => { 'type' => 'integer' },
-            'max_units' => { 'type' => 'integer' },
+            'max_units' => { 'type' => %w[integer null] },
             'label' => { 'type' => %w[string null] }
           },
           'required' => %w[label max_units min_units],
+          'additionalProperties' => false
+        )
+      end
+    end
+
+    context 'when an ActiveModel field type is overridden in the serializer' do
+      subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
+
+      let(:restrictions_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :min_units, type: %w[integer null]
+        end
+      end
+
+      let(:restrictions_model) do
+        Class.new do
+          include ActiveModel::Model
+          include ActiveModel::Attributes
+
+          attribute :min_units, :integer
+
+          validates :min_units, presence: true
+
+          def self.name
+            'Restrictions'
+          end
+        end
+      end
+
+      it 'prefers the serializer type over the inferred one' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Restrictions',
+          'properties' => {
+            'min_units' => { 'type' => %w[integer null] }
+          },
+          'required' => %w[min_units],
+          'additionalProperties' => false
+        )
+      end
+    end
+
+    context 'when an ActiveModel model does not include validations' do
+      subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
+
+      let(:restrictions_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :min_units
+          field :max_units
+        end
+      end
+
+      let(:restrictions_model) do
+        Class.new do
+          include ActiveModel::Attributes
+
+          attribute :min_units, :integer
+          attribute :max_units, :integer
+
+          def self.name
+            'Restrictions'
+          end
+        end
+      end
+
+      it 'assumes attributes are nullable' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Restrictions',
+          'properties' => {
+            'min_units' => { 'type' => %w[integer null] },
+            'max_units' => { 'type' => %w[integer null] }
+          },
+          'required' => %w[max_units min_units],
+          'additionalProperties' => false
+        )
+      end
+    end
+
+    context 'when a Dry::Struct is provided as the model' do
+      subject(:generate) { described_class.generate(serializer: restrictions_serializer, model: restrictions_model) }
+
+      let(:restrictions_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :min_units, type: :integer
+          field :label, type: :string
+        end
+      end
+
+      let(:restrictions_model) do
+        Class.new(Dry::Struct) do
+          attribute :min_units, Dry::Types['integer']
+          attribute :label, Dry::Types['string']
+
+          def self.name
+            'Restrictions'
+          end
+        end
+      end
+
+      it 'does not blow up and uses the serializer-declared types' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'title' => 'Restrictions',
+          'properties' => {
+            'min_units' => { 'type' => :integer },
+            'label' => { 'type' => :string }
+          },
+          'required' => %w[label min_units],
           'additionalProperties' => false
         )
       end

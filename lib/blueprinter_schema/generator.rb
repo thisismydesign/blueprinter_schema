@@ -88,14 +88,11 @@ module BlueprinterSchema
     end
 
     def model_attribute_to_json_schema(name)
-      if @model.respond_to?(:columns_hash)
-        column = @model.columns_hash[name]
-        type_to_json_schema(column&.type, column&.null)
-      elsif @model.respond_to?(:type_for_attribute)
-        type_to_json_schema(@model.type_for_attribute(name)&.type, false)
-      else
-        @fallback_definition.dup
-      end
+      type_to_json_schema(model_attributes.type(name), model_attributes.nullable?(name))
+    end
+
+    def model_attributes
+      @model_attributes ||= ModelAttributes.new(@model)
     end
 
     def merge_field_options(type_definition, options)

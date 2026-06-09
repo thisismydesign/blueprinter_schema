@@ -186,13 +186,13 @@ class Restrictions
 
   attribute :min_units, :integer
   attribute :max_units, :integer
-  attribute :label, :string
+
+  validates :min_units, presence: true
 end
 
 class RestrictionsSerializer < Blueprinter::Base
   field :min_units
   field :max_units
-  field :label, type: [:string, :null]
 end
 
 BlueprinterSchema.generate(serializer: RestrictionsSerializer, model: Restrictions)
@@ -207,18 +207,13 @@ BlueprinterSchema.generate(serializer: RestrictionsSerializer, model: Restrictio
       "type" => "integer"
     },
     "max_units" => {
-      "type" => "integer"
-    },
-    "label" => {
-      "type" => ["string", "null"]
+      "type" => ["integer", "null"]
     }
   },
-  "required" => ["max_units", "min_units", "label"],
+  "required" => ["max_units", "min_units"],
   "additionalProperties" => false
 }
 ```
-
-Note: Attributes are assumed to be non-null. If an attribute is nullable, specify it explicitly in the serializer.
 
 ## Development
 
