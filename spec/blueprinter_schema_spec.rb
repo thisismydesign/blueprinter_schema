@@ -115,6 +115,25 @@ RSpec.describe BlueprinterSchema do
       end
     end
 
+    context 'with deprecated field' do
+      let(:user_serializer) do
+        Class.new(Blueprinter::Base) do
+          field :legacy_name, type: 'string', deprecated: true
+        end
+      end
+
+      it 'generates json schema with deprecated flag' do
+        expect(generate).to eq(
+          'type' => 'object',
+          'properties' => {
+            'legacy_name' => { 'type' => 'string', 'deprecated' => true }
+          },
+          'required' => %w[legacy_name],
+          'additionalProperties' => false
+        )
+      end
+    end
+
     context 'when association is provided' do
       subject(:generate) { described_class.generate(serializer: user_serializer) }
 

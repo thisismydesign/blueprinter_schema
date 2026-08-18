@@ -20,6 +20,7 @@ class UserSerializer < Blueprinter::Base
   field :email, type: :string, format: :email
   field :role, type: :string, enum: ["user", "admin"]
   field :tags, type: :array, items: { type: :string }
+  field :legacy_name, type: :string, deprecated: true
 end
 
 BlueprinterSchema.generate(serializer: UserSerializer)
@@ -50,9 +51,13 @@ BlueprinterSchema.generate(serializer: UserSerializer)
     "tags" => {
       "type" => "array",
       "items" => { "type" => "string" }
+    },
+    "legacy_name" => {
+      "type" => "string",
+      "deprecated" => true
     }
   },
-  "required" => ["first_name", "last_name", "full_name", "email", "role", "tags"],
+  "required" => ["first_name", "last_name", "full_name", "email", "role", "tags", "legacy_name"],
   "additionalProperties" => false
 }
 ```

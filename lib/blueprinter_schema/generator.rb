@@ -100,6 +100,7 @@ module BlueprinterSchema
       type_definition['items'] = options[:items].deep_stringify_keys if options[:items]
       type_definition['format'] = options[:format] if options[:format]
       type_definition['description'] = options[:description] if options[:description]
+      type_definition['deprecated'] = true if options[:deprecated]
       type_definition
     end
 
