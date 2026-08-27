@@ -14,7 +14,6 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.4.3
           bundler-cache: true
 
       - name: Build
@@ -29,7 +28,6 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.4.3
           bundler-cache: true
 
       - name: Lint
@@ -38,13 +36,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.3', '3.4', '4.0']
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.4.3
+          ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
       - name: Test
